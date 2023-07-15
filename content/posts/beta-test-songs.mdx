@@ -13,7 +13,7 @@ It does this by creating a marketplace where producers can anonymously submit an
 
 ## Objective
 
-Create something with as little work as possible that still helps people. I.e. I want to build an MVP (minimum viable product).
+Create something with as little work as possible that still helps people (i.e. I want to build an MVP).
 
 I definitely failed to do as little work as possible. Through the course of this project I caught myself over engineering things left and right. I will go into this later in the article.
 
@@ -87,4 +87,58 @@ Naturally as a web app, there are two distinct parts: the backend and frontend.
 - Containers
 - NestJS
 - Postgres
+- Terraform
 - Mixpanel (analytics)
+
+### The Database
+
+#### Why SQL?
+
+The primary reason I opted for SQL was for extendability. Features such as multiple reviews per song and select a random song would work better in a relational database.
+
+#### Schema
+
+The schema is pretty straight forward and handles our access patterns well.
+
+![](/betatestsongs_schema.png)
+
+## Wins
+
+There were a few solved challenges that are useful and applicable to other projects.
+
+Such as:
+
+- Prisma migrations for an RDS instance in a private subnet
+- Doing 0 downtime deploys with a single (free) t3.micro EC2 instance
+- Prevented users viewing their own track submissions despite there being no login / accounts
+- Using Mixpanel to track page landings and first time visits
+
+## Mistakes
+
+Recall that my primary goal with this project was to help users. The mistakes I made around that goal helped me learn.
+
+## Over Engineering
+
+A mistake that stood out was the one I was originally trying to avoid: over engineering.
+I caught myself spending time setting up cloudwatch alerts to enable scaling the application layer.
+I shouldn't have bothered with this until I actually needed it (i.e. when I had users).
+I also spent too much time setting up my infrastructure and deployments using IaC when I didn't need to.
+
+All of this engineering effort is great when there is users, but if there is none it's a waste.
+
+What I should have been focused on is creating a bare bones PoC (Proof of Concept). Something just good enough that I can show potential users and get feedback to see if I'm even solving a problem.
+
+## Technical Mistakes
+
+The site's SEO is not good. I've submitted the site to Google's Seach Console and the site still does not show up on Google.
+
+This mistake may have to do with the former: I accidentally deployed a version of my site that had an api route to localhost. In other words I had localhost hardcoded.
+When I visited the site through my browser Google **really** did not like this and actually blacklisted my site and warned users not to visit.
+I had to submit a request for them to review that the site is now safe. This was a really bad error and one I will not make again.
+
+## Takeaways
+
+1. Establish Product Market Fit above all else. If I want users, then users need to want the product.
+2. Just use Vercel. It's all you need for spinning up a web app quickly.
+   -- It's so easy to get up and running with a web app that has good performance, decent extendability, automated deploys, etc.
+   -- The best part, it even comes with a backend where you can store secrets and do any sort of server application logic required.
