@@ -1,0 +1,90 @@
+---
+title: BetaTestSongs.com
+description: A fullstack web app used for EDM producers to get feedback on their tracks.
+date: "2023-07-15"
+---
+
+## What is [BetaTestSongs.com](https://BetaTestSongs.com)
+
+(Hopefully that link isn't dead)
+
+BetaTestSongs.com is meant for EDM producers. It's a tool to help solve the problem of getting unbiased feedback for WIP (work in progress) tracks.
+It does this by creating a marketplace where producers can anonymously submit and review tracks.
+
+## Objective
+
+Create something with as little work as possible that still helps people. I.e. I want to build an MVP (minimum viable product).
+
+I definitely failed to do as little work as possible. Through the course of this project I caught myself over engineering things left and right. I will go into this later in the article.
+
+### Things That Reduced Time and Development Effort
+
+- Used [a template](https://tailwindui.com/components/marketing/sections/heroes) and [React components](https://tailwindui.com/components/application-ui/overlays/modals) from Tailwind CSS.
+  - Using a template and ready made React components helps so much with not messing around with design and responsiveness.
+- Opted out of user authentication.
+  - By avoiding authentication I'm not only getting rid of an extra hurdle for users, I'm also saving myself the complexity that comes with it.
+- Deployed directly from my machine (as opposed to using GitHub Actions).
+  - This was the first time I did this. Instead of building out Github Actions and managing secrets, I just ran deployments directly from my machine.
+- Opted to use links instead of files.
+  - Instead of managing file uploads, storage, and fetching, users just submitted [SoundCloud](https://soundcloud.com) links to their tracks.
+
+## Core Functionality
+
+### Domain Concepts
+
+Song: a song that an artist wants feedback for.
+
+Review: feedback given to a song.
+
+Review Queue: a FIFO queue of songs waiting to be approved.
+
+Review Started: a user has started a review and now "owns" that song for an hour. If the review is not completed it goes back to the review queue with top priority.
+
+Review Finished: feedback has been submitted.
+
+### Access Patterns
+
+Users can:
+
+- submit a link to a song
+- start a review, which will fetch the oldest song in the review queue
+- submit a review, which will trigger a notification email to the user that requested the review
+- see a submitted review for a song
+
+## Architecture
+
+The web app is hosted with AWS using the following services: s3, CloudFront, ECS, EC2, ECR, RDS, & SES.
+
+Here is a high level diagram of the cloud infrastructure that makes up BetaTestSongs.com.
+
+<div
+  style={{
+    width: "660px",
+    height: "340px",
+    margin: "10px",
+    position: "relative",
+  }}
+>
+  <iframe
+    allowfullscreen
+    frameborder="0"
+    style={{ width: "660px", height: "340px", "pointer-events": "none" }}
+    src="https://lucid.app/documents/embedded/53942ca1-d74d-4190-a7e0-5b6f009ea749"
+    id="TdCcGj3-CkVz"
+  ></iframe>
+</div>
+
+Naturally as a web app, there are two distinct parts: the backend and frontend.
+
+### Frontend Tech
+
+- Vite
+- React
+- Tailwind CSS
+
+### Backend Tech
+
+- Containers
+- NestJS
+- Postgres
+- Mixpanel (analytics)
