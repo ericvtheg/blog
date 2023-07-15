@@ -1,32 +1,19 @@
 ---
 title: BetaTestSongs.com
-description: A fullstack web app used for EDM producers to get feedback on their tracks.
+description: A fullstack web app used for EDM producers to get feedback on their songs.
 date: "2023-07-15"
 ---
 
 ## What is [BetaTestSongs.com](https://BetaTestSongs.com)
 
-(Hopefully that link isn't dead)
+BetaTestSongs.com is for EDM producers. It's a tool to help solve the problem of getting unbiased feedback for WIP (work in progress) songs.
+It does this by creating a marketplace where producers can anonymously submit and review songs.
 
-BetaTestSongs.com is meant for EDM producers. It's a tool to help solve the problem of getting unbiased feedback for WIP (work in progress) tracks.
-It does this by creating a marketplace where producers can anonymously submit and review tracks.
+### Objective
 
-## Objective
+Create something with as little work as possible that still helps people (i.e. build an MVP).
 
-Create something with as little work as possible that still helps people (i.e. I want to build an MVP).
-
-I definitely failed to do as little work as possible. Through the course of this project I caught myself over engineering things left and right. I will go into this later in the article.
-
-### Things That Reduced Time and Development Effort
-
-- Used [a template](https://tailwindui.com/components/marketing/sections/heroes) and [React components](https://tailwindui.com/components/application-ui/overlays/modals) from Tailwind CSS.
-  - Using a template and ready made React components helps so much with not messing around with design and responsiveness.
-- Opted out of user authentication.
-  - By avoiding authentication I'm not only getting rid of an extra hurdle for users, I'm also saving myself the complexity that comes with it.
-- Deployed directly from my machine (as opposed to using GitHub Actions).
-  - This was the first time I did this. Instead of building out Github Actions and managing secrets, I just ran deployments directly from my machine.
-- Opted to use links instead of files.
-  - Instead of managing file uploads, storage, and fetching, users just submitted [SoundCloud](https://soundcloud.com) links to their tracks.
+Even with this goal, throughout the course of this project I caught myself over engineering. I will go more into this later in the article.
 
 ## Core Functionality
 
@@ -36,7 +23,7 @@ Song: a song that an artist wants feedback for.
 
 Review: feedback given to a song.
 
-Review Queue: a FIFO queue of songs waiting to be approved.
+Review Queue: a FIFO queue of songs waiting to be reviewed.
 
 Review Started: a user has started a review and now "owns" that song for an hour. If the review is not completed it goes back to the review queue with top priority.
 
@@ -94,13 +81,24 @@ Naturally as a web app, there are two distinct parts: the backend and frontend.
 
 #### Why SQL?
 
-The primary reason I opted for SQL was for extendability. Features such as multiple reviews per song and select a random song would work better in a relational database.
+The primary reason I opted for SQL was for extendability. Features such as multiple reviews per song and selecting a random song would work better in a relational database.
 
 #### Schema
 
 The schema is pretty straight forward and handles our access patterns well.
 
 ![](/betatestsongs_schema.png)
+
+## Things That Reduced Time and Development Effort
+
+- Used [a template](https://tailwindui.com/components/marketing/sections/heroes) and [React components](https://tailwindui.com/components/application-ui/overlays/modals) from Tailwind CSS.
+  - Using a template and ready made React components helps so much with not messing around with design and responsiveness.
+- Opted out of user authentication.
+  - By avoiding authentication I'm not only getting rid of an extra hurdle for users, I'm also saving myself from the complexity that comes with it.
+- Deployed directly from my machine (as opposed to using GitHub Actions).
+  - This was the first time I did this. Instead of building out Github Actions and managing secrets, I just ran deployments directly from my machine.
+- Opted to use links instead of files.
+  - Instead of managing file uploads, storage, and fetching, users just submitted [SoundCloud](https://soundcloud.com) links to their songs.
 
 ## Wins
 
@@ -110,16 +108,16 @@ Such as:
 
 - Prisma migrations for an RDS instance in a private subnet
 - Doing 0 downtime deploys with a single (free) t3.micro EC2 instance
-- Prevented users viewing their own track submissions despite there being no login / accounts
+- Prevented users from viewing their own song submissions despite there being no login / accounts
 - Using Mixpanel to track page landings and first time visits
 
 ## Mistakes
 
-Recall that my primary goal with this project was to help users. The mistakes I made around that goal helped me learn.
+Recall that my primary goal with this project was to help users.
 
 ## Over Engineering
 
-A mistake that stood out was the one I was originally trying to avoid: over engineering.
+The mistake that stood out was the one I was originally trying to avoid: over engineering.
 I caught myself spending time setting up cloudwatch alerts to enable scaling the application layer.
 I shouldn't have bothered with this until I actually needed it (i.e. when I had users).
 I also spent too much time setting up my infrastructure and deployments using IaC when I didn't need to.
@@ -130,15 +128,15 @@ What I should have been focused on is creating a bare bones PoC (Proof of Concep
 
 ## Technical Mistakes
 
-The site's SEO is not good. I've submitted the site to Google's Seach Console and the site still does not show up on Google.
+The site's SEO is not good. I've submitted the site to Google's Search Console and the site still does not show up on Google.
 
-This mistake may have to do with the former: I accidentally deployed a version of my site that had an api route to localhost. In other words I had localhost hardcoded.
-When I visited the site through my browser Google **really** did not like this and actually blacklisted my site and warned users not to visit.
-I had to submit a request for them to review that the site is now safe. This was a really bad error and one I will not make again.
+This mistake may relate to the above: I accidentally deployed a version of my site that had an api route to localhost. In other words I had localhost hardcoded in the frontend app.
+When I visited the site through my browser Google _really_ did not like this and actually blacklisted my site and warned users not to visit.
+I had to submit a request for them to review that the site is now safe. This was a really costly mistake and one I will not make again — use relative paths.
 
 ## Takeaways
 
 1. Establish Product Market Fit above all else. If I want users, then users need to want the product.
 2. Just use Vercel. It's all you need for spinning up a web app quickly.
-   -- It's so easy to get up and running with a web app that has good performance, decent extendability, automated deploys, etc.
-   -- The best part, it even comes with a backend where you can store secrets and do any sort of server application logic required.
+   - It's so easy to get up and running with a web app that has good performance, decent extendability, automated deploys, etc.
+   - The best part, it even comes with a backend where you can store secrets and do any necessary server application logic.
