@@ -130,10 +130,8 @@ What I should have been focused on is creating a bare bones PoC (Proof of Concep
 
 ## Technical Mistakes
 
-The site's SEO is not good. I've submitted the site to Google's Search Console and the site still does not show up on Google.
-
-This mistake may relate to the above: I accidentally deployed a version of my site that had an api route to localhost. In other words I had localhost hardcoded in the frontend app.
-When I visited the site through my browser Google _really_ did not like this and actually blacklisted my site and warned users not to visit.
+I accidentally deployed a version of my site that had an api route hardcoded to localhost. In other words I had localhost hardcoded in the actual webpage itself.
+When I visited the site through my browser Google _really_ did not like this. It blacklisted my site and warned users not to visit.
 I had to submit a request for them to review that the site is now safe. This was a really costly mistake and one I will not make again — use relative paths.
 
 ## Takeaways
