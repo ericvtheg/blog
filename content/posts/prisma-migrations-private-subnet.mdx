@@ -6,11 +6,12 @@ date: "2023-07-23"
 
 ## The Problem
 
-Most of us who have had a hobby project using Prisma love the amazing developer experience of generated types and easy schema migrations.
-Eventually we get to the point where we need to actually deploy and host our code so users can use interact with our software (that is the goal after all).
+Most of us who have had a hobby project using Prisma love the developer experience of generated types and easy schema migrations.
+Eventually we get to the point where we need to actually deploy and host our code so users can interact with our software (that is the goal after all).
 This mean we need to do schema updates and migrations in our production environment without downtime.
-Now as good software engineers we know to keep our database safe from the outside world by keeping it in a private subnet.
-But this means that we must deal with the issue of somehow running our Prisma migrations within the private subnet as well.
+
+As good software engineers we know to keep our database safe from the outside world via private subnets.
+But this means that we must deal with the problem of running our Prisma migrations within the private subnet as well.
 
 ## Priorities
 
@@ -43,7 +44,7 @@ Since we already have application code with all of the necessary secrets and acc
 
 ## Implementation
 
-we've established that our application containers can just run the migration themselves without some sort of complicated build step in our deployment pipeline.
+We've established that our application containers can just run the migration themselves without some sort of complicated build step in our deployment pipeline.
 The way we can do this is by making our `Prisma` module a prod dependency (i.e. not a dev dependency) and running `prisma migrate deploy` right before our application boots.
 
 Take a look at my package.json file
@@ -52,13 +53,13 @@ Take a look at my package.json file
 {
   ...
   "scripts": {
-    "start:prod": "prisma:migrate && node dist/src/main",
+    "start:prod": "prisma:migrate && node dist/src/main", // run migration before starting application
     "prisma:migrate": "prisma migrate deploy",
   },
   "dependencies": {
     ...
     "@prisma/client": "4.14.1",
-    "prisma": "^4.14.1",
+    "prisma": "^4.14.1", // prod dependency
     ...
   },
   ...
