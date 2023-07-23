@@ -1,0 +1,84 @@
+---
+title: Running Prisma Migrations in a Private Subnet
+description: How to deal with running prisma migrations for an AWS RDS instance that is running in a private subnet.
+date: "2023-07-23"
+---
+
+## The Problem
+
+Most of us who have had a hobby project using Prisma love the amazing developer experience of generated types and easy schema migrations.
+Eventually we get to the point where we need to actually deploy and host our code so users can use interact with our software (that is the goal after all).
+This mean we need to do schema updates and migrations in our production environment without downtime.
+Now as good software engineers we know to keep our database safe from the outside world by keeping it in a private subnet.
+But this means that we must deal with the issue of somehow running our Prisma migrations within the private subnet as well.
+
+## Priorities
+
+Now this problem for me typically comes up on my personal projects, because I don't have platform engineers working on making my life easier.
+This means my priorities are: **low cost**, **automatic**, and **low complexity**.
+
+## Architecture
+
+For me my backend architecture typically looks something like this:
+
+<div
+  style={{
+    width: "660px",
+    height: "340px",
+    margin: "10px",
+    position: "relative",
+  }}
+>
+  <iframe
+    allowfullscreen
+    frameborder="0"
+    style={{ width: "660px", height: "340px", "pointer-events": "none" }}
+    src="https://lucid.app/documents/embedded/53942ca1-d74d-4190-a7e0-5b6f009ea749"
+    id="TdCcGj3-CkVz"
+  ></iframe>
+</div>
+
+Naturally, my application containers are running in the same private subnet as my database since they need access to the data.
+Since we already have application code with all of the necessary secrets and accessibility to the database, seems like a natural place to run a migration!
+
+## Implementation
+
+we've established that our application containers can just run the migration themselves without some sort of complicated build step in our deployment pipeline.
+The way we can do this is by making our `Prisma` module a prod dependency (i.e. not a dev dependency) and running `prisma migrate deploy` right before our application boots.
+
+Take a look at my package.json file
+
+```
+{
+  ...
+  "scripts": {
+    "start:prod": "prisma:migrate && node dist/src/main",
+    "prisma:migrate": "prisma migrate deploy",
+  },
+  "dependencies": {
+    ...
+    "@prisma/client": "4.14.1",
+    "prisma": "^4.14.1",
+    ...
+  },
+  ...
+}
+```
+
+We need the `prisma` module as a production dependency because it is running the migration in our deployed application container.
+Now our prisma migrate runs right before our application start and that's it.
+
+Prisma maintains its own state of what migrations have and haven't been ran, so there is no issue with attempting to run the same migration over and over.
+
+## Pros & Cons
+
+The Pros are the same as our priorities: low cost, automatic, low complexity.
+
+The cons are: inflated bundle size (Prisma is ~13 MB at the time of writing this) and potentially running multiple migrations at once.
+The most concerning to me is the latter. Now I've never had an issue, but with a big enough project and a good amount of bad luck who knows what could happen (we're talking about distributed systems after all).
+The optimist in me says that between the database and Prisma this should be a case that is handled under the hood.
+
+After doing some research, it seems like this used to be an [issue](https://github.com/prisma/prisma/discussions/3759),
+but has been resolved ever since migrations were marked no longer "experimental" 🎉.
+
+So now go, go and run as many migrations as you can in parallel and if it breaks you make sure to blame Prisma. (JK thank you Prisma!)
