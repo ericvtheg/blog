@@ -1,11 +1,6 @@
 import { allPosts } from "@/.contentlayer/generated";
 import Link from "next/link";
-
-const formatDate = (dateStr: string): string => {
-  const timestamp = Date.parse(dateStr);
-  const date = new Date(timestamp);
-  return date.toLocaleDateString("en-US");
-};
+import { formatDate } from "./utils";
 
 export default function Home() {
   return (
