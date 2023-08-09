@@ -1,0 +1,60 @@
+---
+title: Write Skews and Phantoms
+description: Transactions help us avoid conflicts on data that exists, but what about data that doesn't exist?
+date: "2023-08-08"
+---
+
+As application developers, database transactions abstract us away from [concurrency control](https://www.geeksforgeeks.org/concurrency-control-in-dbms/#)
+to let us design our systems as if just a single process is modifying state serially. [1] {/* 233 */}
+Unfortunately it is not that simple.
+
+Disclaimer: This article is influenced by Martin Kleppmann's book _Designing Data-Intensive Applications_.
+
+<p align="center">
+  <a
+    alt="Designing Data-Intensive Applications by Martin Kleppmann"
+    target="_blank"
+    href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321/ref=sr_1_1?keywords=martin+kleppmann%2527s+designing+data-intensive+applications&amp;qid=1691551612&amp;sprefix=martin+klep%252Caps%252C192&amp;sr=8-1&_encoding=UTF8&tag=ericventor-20&linkCode=ur2&linkId=e1be69645fddf1c77e3edaeafb9d9c2a&camp=1789&creative=9325"
+  >
+    ![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSlR4hC5tiypE9ftFBwNG1qi90tsMqcjs3cZB1vZrk7qZ5YV3dt)
+    Designing Data-Intensive Applications by Martin Kleppmann
+  </a>
+</p>
+
+# Race Conditions
+
+Race conditions can occur when multiple processes are attempting to modify data at the same time.
+They are tricky to test for because they only occur when we get unlucky with timing. [2] {/* 233 */}
+
+To understand the depth of what can be 'unlucky' we have to understand that
+from the our perspective at the top of the software stack all the way to
+the bottom to the hardware anomalies can happen.
+
+Some examples include:
+
+- network
+- yielding cpu in a VM (pg 282)
+
+> In distributed systems, suspicion, pessimism, and paranoia pay off.
+
+<cite>&mdash; Martin Kleppmann</cite>
+
+In order to build robust applications, if something can happen, then we must assume it will happen.
+
+# Transactions
+
+Transactions help but not with everything.
+
+Transactions attempt to be a wonderful abstraction for us application developers, but in the end we must thoroughly understand how transactions work and what level of isolation our database is providing for us
+
+## Transaction Isolation
+
+Adds to the complexity
+
+# Write Skew
+
+We can prevent changing things that exist, but we can't prevent changing things that do not exist.
+
+## Phantoms
+
+(example)
