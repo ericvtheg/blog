@@ -16,7 +16,10 @@ Disclaimer: This article is influenced by Martin Kleppmann's book, _Designing Da
     target="_blank"
     href="https://www.amazon.com/Designing-Data-Intensive-Applications-Reliable-Maintainable/dp/1449373321/ref=sr_1_1?keywords=martin+kleppmann%2527s+designing+data-intensive+applications&amp;qid=1691551612&amp;sprefix=martin+klep%252Caps%252C192&amp;sr=8-1&_encoding=UTF8&tag=ericventor-20&linkCode=ur2&linkId=e1be69645fddf1c77e3edaeafb9d9c2a&camp=1789&creative=9325"
   >
-    ![](https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSlR4hC5tiypE9ftFBwNG1qi90tsMqcjs3cZB1vZrk7qZ5YV3dt)
+    <img
+      src="https://encrypted-tbn3.gstatic.com/images?q=tbn:ANd9GcSlR4hC5tiypE9ftFBwNG1qi90tsMqcjs3cZB1vZrk7qZ5YV3dt"
+      alt="Book Cover"
+    />
     Designing Data-Intensive Applications by Martin Kleppmann
   </a>
 </p>
@@ -30,43 +33,32 @@ data being manipulated in ways we didn't anticipate.
 This illusion is done through concurrency control via transaction isolation.
 Transaction isolation can have detrimental _gotchas_ that we must be aware of.
 In order to build robust systems we must thoroughly understand how transactions
-work and what level of isolation our database is providing.
+work and what level of isolation our database provides.
 
-Before diving into transcation isolation, lets discuss what we are trying to avoid.
+Before diving into transaction isolation, lets discuss what we are trying to avoid.
 
 ## Race Conditions
 
-Race conditions can occur when multiple processes are attempting to modify data at the same time
-leading to situations where unexpected cases can occur.
+Race conditions can occur when multiple processes attempt to modify data at the same time
+leading to situations where unexpected outcomes occur.
 
 An example of a race condition can be as benign as a user creating an account
 but not seeing their profile when they refresh the page.
-[A race condition can also be as sinister as bankrupting an exchange](https://old.reddit.com/r/Bitcoin/comments/1wtbiu/how_i_stole_roughly_100_btc_from_an_exchange_and/).
+[A race condition can also be as sinister as bankrupting a CryptoConcurrency exchange](https://old.reddit.com/r/Bitcoin/comments/1wtbiu/how_i_stole_roughly_100_btc_from_an_exchange_and/).
 
 Race conditions are tricky to test for because they only occur when we get unlucky with timing. [2] {/* 233 */}
-
-To understand the depth of what in our software stack can be 'unlucky' we must have cognizance
-from the top of the software stack all the way to hardware at the bottom
-
-Some examples include:
-
-- network
-- yielding cpu in a VM (pg 282)
-
-> In distributed systems, suspicion, pessimism, and paranoia pay off.
-
-<cite>&mdash; Martin Kleppmann</cite>
-
-In order to build robust and dependable applications, if something can happen, then we must assume it will happen.
+To understand the depth of what in our software stack can be 'unlucky' we must recognize
+that anomalies can occur anywhere from the top of the software stack all the way to the
+hardware at the bottom. For the purpose of this article we will focus on the race conditions
+that can occur in our database and how we can mitigate them using transaction isolation.
 
 ## Transaction Isolation
 
-I think I just write about transaction isolation and save write skew for another time
-
-# Write Skew
-
-We can prevent changing things that exist, but we can't prevent changing things that do not exist.
-
-## Phantoms
+## Write skew and Phantoms
 
 (example)
+
+## Conclusion
+
+As much as we'd like to trust our abstractions and lean into them, we are forced to think about every layer's failure in our systems
+and account for them.
