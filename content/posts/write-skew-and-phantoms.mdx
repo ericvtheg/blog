@@ -1,6 +1,6 @@
 ---
-title: Write Skews and Phantoms
-description: Transactions help us avoid conflicts on data that exists, but what about data that doesn't exist?
+title: Database Transaction are a Leaky Abstraction
+description: Transactions are empowering for application developers, but the conversation doesn't stop there.
 date: "2023-08-08"
 ---
 
@@ -35,7 +35,21 @@ Transaction isolation can have detrimental _gotchas_ that we must be aware of.
 In order to build robust systems we must thoroughly understand how transactions
 work and what level of isolation our database provides.
 
-Before diving into transaction isolation, lets discuss what we are trying to avoid.
+## Transaction Isolation Levels
+
+Transaction isolation refers to how the database itself handles data access.
+Each isolation level has its own rules for when data can be read/written to.
+Limiting access to other transactions is done through locking and serialization.
+As data access becomes more and more strict there are trade-offs, we get stronger
+data consistency, but weaker concurrency capacity.
+
+Understanding how our databases writes and reads is crucial for mitigating the potential
+of race conditions. To add onto the complexity there is no standard for isolation levels.
+For example Snapshot isolation in PostgreSQL is called repetable read, while Oracle
+calls it serializable. [pg 242]
+
+Before diving into different transaction isolation levels, lets discuss
+what we are trying to avoid.
 
 ## Race Conditions
 
@@ -50,15 +64,59 @@ Race conditions are tricky to test for because they only occur when we get unluc
 To understand the depth of what in our software stack can be 'unlucky' we must recognize
 that anomalies can occur anywhere from the top of the software stack all the way to the
 hardware at the bottom. For the purpose of this article we will focus on the race conditions
-that can occur in our database and how we can mitigate them using transaction isolation.
+that can occur in our database and how we can mitigate them using different transaction isolation levels.
 
-## Transaction Isolation
+### Mitigating Race Conditions
 
-## Write skew and Phantoms
+In this section we will go through race condition examples and discuss how they could be avoided
+with a specific transation isolation level.
+
+### Read Committed
+
+Does x and solves y race condition
+
+### Snapshot Isolation and Repeatable Read
+
+Does x and solves y race condition.
+
+### Serializable
+
+Does x and solves write skew race condition.
+
+### Write Skew
+
+Write skew is a more sly example of a race condition. This is due to it not being able to be prevented
+using the most transaction isolation levels as we'd traditionally expect. Write skew is caused by phantoms, where
+we check for the abscence of data.
+
+For example, I go to a fitness studio with live classes called Orange Theory
+(not affiliated but I am a fan). I attend Orange Theory classes by going into the app
+and booking a class. Naturally a class has a finite amount of capacity for people that
+can not be exceeded, so the database operation probably looks something like:
+
+```sql
+INSERT Eric INTO SCHEDULED_ATTENDEES
+WHERE SCHEDULED_ATTENDEES.class_id = X
+AND 20 > (SELECT COUNT(*) FROM SCHEDULED_ATTENDEES WHERE class_id = X)
+```
+
+Excuse the crude example, but as you can see we're checking for the absence of rows in this query.
+In this case we're checking that there is less than 20 people scheduled to attend class X.
+
+What happens if we only have a single slot left for a class, and two users request to book at
+the same time? For each request's database query there is less than 20 users at the
+time, so the database does the insert and the request is successful. Now we have 21 users booked
+for a class that only has capacity for 20 people. Even in a transaction there is no failure to
+rollback in this case, the database schema itself has no constraint on the amount of scheduled
+attendees for a class.
+
+Write skews are devious.
 
 (example)
 
 ## Conclusion
+
+this article doesn't even discuss replication which adds network, balancing, consensus, etc to the mix.
 
 As much as we'd like to trust our abstractions and lean into them, we are forced to think about every layer's failure in our systems
 and account for them.
