@@ -69,25 +69,63 @@ that can occur in our database and how we can mitigate them using different tran
 ### Mitigating Race Conditions
 
 In this section we will go through race condition examples and discuss how they could be avoided
-with a specific transation isolation level.
+with different transation isolation levels.
 
 ### Read Committed
 
-Does x and solves y race condition
+The most basic level of transaction isolation is read committed. It makes two guarantees:
+
+> 1. When reading from the database, you will only see data that has been committed (no dirty reads).
+> 2. When writing to the database, you will overwrite data that has been commited (no dirty writes).
+
+<cite>&mdash; Martin Kleppmann</cite>
+
+#### Race Condition Example
+
+The race conditions prevented by read committed isolation level are fundamental to database integrity.
+A fundamental example is maintaining state between multiple rows within a schema.
+
+For this exmaple a user has bank accounts X and Y. They decide to transfer $10,000 from X and deposit into Y.
+Since this entails two separate operations, this would require a database transaction
+to ensure integrity in the operation. The result of the transaction should not be exposed
+until it is fully completed. If this wasn't the case imagine that $10,000 was the total amount of money
+the user had between bank accounts X and Y, in the middle of this operation executing the user refreshes the page.
+Thus causing the user to see $0 between both bank accounts, a very uncomftorable situation for the user to be in.
+
+Another case for this example could be the bank is determining how much to charge for the user's bank
+accountfor the month. The bank has a policy where if the total dollars exceeds $5,000 then there is no
+monthly bill. Unfortunately due to the lack of a transaction, the monthly billing service read $0 in
+both accounts, causing a charge. A direct effect of the race condition with real world consequences.
 
 ### Snapshot Isolation and Repeatable Read
 
-Does x and solves y race condition.
+As the name implies, in the snapshot isolation transaction level, all transactions work on a snapshot
+of the database from when the transaction began. Regardless if subsequent transactions commit, the
+data that is being read/written will stay the same from the perspective of the transaction. [pg 232]
+
+Snapshot isolation is used in PostgreSQL and MySQL and is referred to as repeatable read. [pg 242]
+
+#### Race Condition Example
+
+An excellent example of a race condition that is avoided through the use of snapshot isolation is
+creating a database backup. Naturally when creating a backup of potentially several terabytes of data,
+it will take a relatively long amount of time. Therefore exposing us to race conditions.
+
+As the backup is created several unrelated transactions can complete, potentially exposing us to
+inconsistencies in our data. If a user's bank account X was written to the backup with
+$500, but later there was a transfer from bank account Y that sent $100 to bank account X.
+Then shortly after bank account Y was written to the backup with $100 less than expected,
+causing a user to mysteriously lose $100. With snapshot isolation for the entire length of
+the backup creation process the database will remain consistent, allowing us to create a
+reliable database backup.
 
 ### Serializable
 
-Does x and solves write skew race condition.
+#### Race Condition Example - Write Skew
 
-### Write Skew
-
-Write skew is a more sly example of a race condition. This is due to it not being able to be prevented
-using the most transaction isolation levels as we'd traditionally expect. Write skew is caused by phantoms, where
-we check for the abscence of data.
+Write skew is a more sly example of a race condition. This is due to it not being
+able to be prevented using the listed transaction isolation levels.
+Write skew is caused by phantoms, where we check for the abscence of data.
 
 For example, I go to a fitness studio with live classes called Orange Theory
 (not affiliated but I am a fan). I attend Orange Theory classes by going into the app
@@ -109,10 +147,6 @@ time, so the database does the insert and the request is successful. Now we have
 for a class that only has capacity for 20 people. Even in a transaction there is no failure to
 rollback in this case, the database schema itself has no constraint on the amount of scheduled
 attendees for a class.
-
-Write skews are devious.
-
-(example)
 
 ## Conclusion
 
