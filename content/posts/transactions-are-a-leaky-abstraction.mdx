@@ -1,12 +1,12 @@
 ---
 title: Database Transactions are a Leaky Abstraction
-description: Transactions are empowering for application developers, but the conversation doesn't stop there.
+description: Transactions empower application developers, but we must understand what occurrs under the hood.
 date: "2023-08-15"
 ---
 
 As application developers, database transactions abstract us away from
 [concurrency control](https://www.geeksforgeeks.org/concurrency-control-in-dbms/#)
-to let us design our systems as if just a single process is modifying state serially. [1] {/* 233 */}
+to let us design our systems as if just a single process is modifying state serially. [1]
 Unfortunately it is not that simple.
 
 Disclaimer: This article is influenced by Martin Kleppmann's book, _Designing Data-Intensive Applications_.
@@ -28,120 +28,125 @@ Disclaimer: This article is influenced by Martin Kleppmann's book, _Designing Da
 ## Transactions & Concurrency Control
 
 Database transactions give us the illusion that all operations are done serially.
-If all our database operations were done serially we wouldn't need to worry about our
-data being manipulated in ways we didn't anticipate.
+If this was the case, we wouldn't need to worry about
+exceptional circumstances where our data was modified in ways we didn't anticipate.
 
 This illusion is done through concurrency control via transaction isolation.
-Transaction isolation can have detrimental _gotchas_ that we must be aware of.
-In order to build robust systems we must thoroughly understand how transactions
-work and what level of isolation our database provides.
+Transactions can be configured using different levels of isolation.
+Each level has potentially detrimental _gotchas_ that we must be aware of.
+In order to build robust systems we must understand how transactions
+work and what level of isolation our database uses.
 
 ## Transaction Isolation Levels
 
-Transaction isolation refers to how the database itself handles data access.
+Transaction isolation refers to how the database itself handles concurrent data access.
 Each isolation level has its own rules for when data can be read/written to.
 Limiting access to other transactions is done through locking and serialization.
-As data access becomes more and more strict there are trade-offs, we get stronger
-data consistency, but weaker concurrency capacity.
+As data access becomes more strict there are trade-offs such as stronger
+data consistency but worse performance. [1]
 
 Understanding how our databases writes and reads is crucial for mitigating the potential
-of race conditions. To add onto the complexity there is no standard for isolation levels.
-For example Snapshot isolation in PostgreSQL is called repetable read, while Oracle
-calls it serializable. [pg 242]
+of race conditions between our concurrent transaction. To add even more complexity, there
+is no standard for isolation levels across databases. For example snapshot isolation in
+PostgreSQL is called repetable read, while in Oracle it is called serializable. [2]
 
-Before diving into different transaction isolation levels, lets discuss
+Before diving into different transaction isolation levels, let's further discuss
 what we are trying to avoid.
 
 ## Race Conditions
 
-Race conditions can occur when multiple processes attempt to modify data at the same time
+Race conditions can occur when multiple processes attempt to read/modify data at the same time,
 leading to situations where unexpected outcomes occur.
 
 An example of a race condition can be as benign as a user creating an account
-but not seeing their profile when they refresh the page.
+but not yet seeing their profile when they refresh the page.
 [A race condition can also be as sinister as bankrupting a CryptoConcurrency exchange](https://old.reddit.com/r/Bitcoin/comments/1wtbiu/how_i_stole_roughly_100_btc_from_an_exchange_and/).
 
-Race conditions are tricky to test for because they only occur when we get unlucky with timing. [2] {/* 233 */}
+Race conditions are tricky to test for because they only occur when we get unlucky with timing. [1]
 To understand the depth of what in our software stack can be 'unlucky' we must recognize
-that anomalies can occur anywhere from the top of the software stack all the way to the
-hardware at the bottom. For the purpose of this article we will focus on the race conditions
+that anomalies can occur anywhere from the top of the stack all the way to the
+firemware at the bottom. For the purpose of this article we will focus on race conditions
 that can occur in our database and how we can mitigate them using different transaction isolation levels.
 
 ### Mitigating Race Conditions
 
 In this section we will go through race condition examples and discuss how they could be avoided
-with different transation isolation levels.
+with different transaction isolation levels.
 
 ### Read Committed
 
 The most basic level of transaction isolation is read committed. It makes two guarantees:
 
 > 1. When reading from the database, you will only see data that has been committed (no dirty reads).
-> 2. When writing to the database, you will overwrite data that has been commited (no dirty writes).
+> 2. When writing to the database, you will overwrite data that has been committed (no dirty writes).
 
-<cite>&mdash; Martin Kleppmann</cite> [pg 234]
+<cite>&mdash; Martin Kleppmann</cite> [3]
 
 #### Race Condition Example
 
-The race conditions prevented by read committed isolation level are fundamental to database integrity.
-A fundamental example is maintaining state between multiple rows within a schema.
+The race conditions prevented by the read committed isolation level are fundamental to database integrity.
+An example of using repeatable read to avoid a race condition is maintaining state between multiple rows
+within a schema.
 
-For this exmaple a user has bank accounts X and Y. They decide to transfer $10,000 from X and deposit into Y.
+For this example a user has bank accounts X and Y. They decide to transfer $10,000 from X and deposit into Y.
 Since this entails two separate operations, this would require a database transaction
 to ensure integrity in the operation. The result of the transaction should not be exposed
 until it is fully completed. If this wasn't the case imagine that $10,000 was the total amount of money
 the user had between bank accounts X and Y, in the middle of this operation executing the user refreshes the page.
-Thus causing the user to see $0 between both bank accounts, a very uncomftorable situation for the user to be in.
+Thus causing the user to see $0 in both bank accounts, a very uncomfortable situation for the user to be in.
+Thankfully this typically would be solved shortly by another refresh.
 
-Another case for this example could be the bank is determining how much to charge for the user's bank
-accountfor the month. The bank has a policy where if the total dollars exceeds $5,000 then there is no
+Another case within this example could be the bank is determining the user's monthly fees for their bank
+account. The bank has a policy where if the total dollars exceeds $5,000 then there is no
 monthly bill. Unfortunately due to the lack of a transaction, the monthly billing service read $0 in
-both accounts, causing a charge. A direct effect of the race condition with real world consequences.
+both accounts, causing a charge. A direct consequence of the race condition with real world consequences
+that can be avoided using repeatable committed.
 
 ### Snapshot Isolation and Repeatable Read
 
 As the name implies, in the snapshot isolation transaction level, all transactions work on a snapshot
 of the database from when the transaction began. Regardless if subsequent transactions commit, the
-data that is being read/written will stay the same from the perspective of the transaction. [pg 232]
+data that is being read/written will stay the same from the perspective of the transaction. [4]
 
-Snapshot isolation is used in PostgreSQL and MySQL and is referred to as repeatable read. [pg 242]
+Snapshot isolation is used in PostgreSQL and MySQL and is referred to as repeatable read. [2]
 
 #### Race Condition Example - Read Skew
 
-An excellent example of a race condition that is avoided through the use of snapshot isolation is
+An excellent example of a race condition that is avoided through the use of snapshot isolation is when
 creating a database backup. Naturally when creating a backup of potentially several terabytes of data,
-it will take a relatively long amount of time. Therefore especially exposing us to race conditions.
+it will take a relatively long amount of time to complete. As the backup process is executing,
+several other transactions can complete, potentially exposing us to inconsistencies in our data. [5]
 
-As the backup is created several other transactions can complete, potentially exposing us to
-inconsistencies in our data. [pg 238] If a user's bank account X was written to the backup with
-$500, but later there was a transfer from bank account Y (that has not yet been written to the backup)
-that sent $100 to bank account X. Then there will be an inconsistency in the backup
-where $100 went missing. This inconsistency is called read skew. With snapshot isolation for
-the entire length of the backup creation process the database will remain consistent, allowing us
-to create a reliable database backup.
+For example, there is a backup is occurring and a user's bank account X is written to the backup with
+$500. As the backup continues executing there is a transfer from bank account Y,
+where $100 is sent to bank account X. If bank account Y has not yet been backed up,
+there will be an inconsistency in the backup data where $100 went magically went missing.
+This inconsistency example is called read skew. [5] This case is averted by the backup processing using snapshot isolation.
+By using snapshot isolation the data will remain in a consistent state, allowing us to create a reliable database backup.
 
 ### Serializable Isolation
 
 We started this article saying that transaction isolation is a means to prevent data abnormalities
-from concurrency. What we still allowed concurrency but every transaction is executed as if it had
-executed one at a time. This level of transaction isolation is known as serialization. [pg 252]
+from occurring when there is concurrent data being read/written. What if we still could handle
+concurrent reads/writes but the end result of the data appears as if the transactions had executed one at a time.
+This level of transaction isolation is known as serialization. [6]
 
-There are different ways to implement this either by literally executing a transaction at a time
+There are different ways to implement serialization, either by literally executing a transaction at a time
 (often with partitioned data) or with extensive locking.
 
-It is worth noting that the tradeoff for serialization isolation level are significant. While
-data integrity is guaranteed, there is a lack of scaling [pg. 256] and the potential for much
-higher read/write times. [pg 259 top of page]
+It is worth noting that the tradeoffs for serialization are significant. While
+data integrity is guaranteed, there is a lack of scaling and the potential for much
+higher read/write times. [7] [8]
 
 #### Race Condition Example - Write Skew
 
-Write skew is a more sly example of a race condition. This is due to it not being
-able to be prevented using the previous transaction isolation levels mentioned.
-Write skew is caused by phantoms, in other words, where we check for the abscence of data.
+Write skew is a easy to miss example of a race condition. Write skew is caused by phantoms, in other words,
+data that does not exist. Write skew occurs when database operations depend on the abscence of data.
+The previous isolation levels mentioned, do nothing to create locks on data that does not yet exist.
 
-For example, I go to a fitness studio with live classes called Orange Theory
+Here is a real life example of write skew. I go to a fitness studio with live classes called Orange Theory
 (not affiliated but I am a fan). I attend Orange Theory classes by going into the app
-and booking a class. Naturally a class has a finite amount of capacity that
+and booking a class. Naturally, a class has a finite amount of capacity that
 can not be exceeded, so when scheduling a class for myself the database insert probably
 looks something like:
 
@@ -151,21 +156,29 @@ WHERE SCHEDULED_ATTENDEES.class_id = X
 AND 20 > (SELECT COUNT(*) FROM SCHEDULED_ATTENDEES WHERE class_id = X)
 ```
 
-Excuse the crude example, but as you can see we're checking that there is less than
-20 people scheduled to attend class X. In other words we're checking for the absence of rows.
+As you can see we're checking that there is less than 20 attendees scheduled for class X.
+If there are less than 20 rows for the class, then the database does the insert.
+In other words we're checking for the absence of rows.
 
 What happens if we only have a single slot left for a class, and two users request to book at
-the same time? At the time of each request's database query there is less than 20 users at the
-booked, so the database does the insert and the request is successful. Now we have 21 users booked
-for a class that only has capacity for 20 people. Even in a transaction, there is no failure to
-cause a rollback in this case. The database schema itself has no constraint on the amount of
-scheduled attendees for a class.
+the same time? At the time of each request's database query there is less than 20 users
+booked, so the database does the insert and the request is successful. Now, we have 21 users booked
+for a class that only has the capacity for 20 people. A major error. In the previous transaction
+isolation levels, there is no serialization and no locking on the non-existent rows.
+Everything that took place was legal and the database schema itself
+has no constraint on the amount of scheduled attendees for the class.
 
-This is solved if we literally execute each query serially on a single process, but what about
-the serialization isolation implemented using locks? The exact same case would **still** occur.
-So how do we solve this? We use predicate locking. [pg 259] Predicate locks work by locking
-a whole range of rows that are accessed in the query, whether they exist or not. By issueing a lock
-on the range of rows in this case, we prevent the race condition thus allowing us to safely book
+This is a sneaky race conditon, but the serialization isolation level solves this right? For most implementations, no.
+Serialization typically only locks rows that are being written to. Meaning that this case would still
+occur, because the row being written does not prevent another row from being written
+
+So how do we solve this? There are two ways:
+
+1. Literally executing each transaction one at a time [6]
+2. Using predicate locks [8]
+
+Predicate locks work by locking a whole range of rows that are accessed in the query, whether they exist or not.
+By issuing a lock on the range of rows in this case, we prevent the race condition thus allowing us to safely book
 our live fitness studio class. Phew.
 
 ## Conclusion
@@ -176,3 +189,21 @@ In the end there is no one size fits all solution. The best we can do is pick th
 best isolation level for the job and build around its short comings in our application.
 In order to do so we must have an understanding of how transactions work in our database.
 The very definition of a leaky abstraction.
+
+# References
+
+<cite>
+  Kleppmann, M. (2017). Designing Data-Intensive Applications. Beijing:
+  O'Reilly. ISBN: 978-1-4493-7332-0
+</cite>
+
+The following all refer to pages in _Designing Data-Intensive Applications_
+
+[1] Page 233 \
+[2] Page 242 \
+[3] Page 234 \
+[4] Page 232 \
+[5] Page 238 \
+[6] Page 252 \
+[7] Page 256 \
+[8] Page 259
