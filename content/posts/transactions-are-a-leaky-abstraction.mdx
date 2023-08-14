@@ -46,9 +46,9 @@ As data access becomes more strict there are trade-offs such as stronger
 data consistency but with worse performance. [1]
 
 Understanding how our databases writes and reads is crucial for mitigating the potential
-of race conditions between our concurrent transaction. To add even more complexity, there
+of race conditions between our concurrent transactions. To add even more complexity, there
 is no standard for isolation levels across databases. For example, snapshot isolation in
-PostgreSQL is called repetable read, while in Oracle it is called serializable. [2]
+PostgreSQL is called repeatable read, while in Oracle it is called serializable. [2]
 
 Before diving into different transaction isolation levels, let's further discuss
 what we are trying to avoid.
@@ -65,7 +65,7 @@ but not yet seeing their profile when they refresh the page.
 Race conditions are tricky to test for because they only occur when we get unlucky with timing. [1]
 To understand the depth of what in our software stack can be 'unlucky' we must recognize
 that anomalies can occur anywhere from the top of the stack all the way to the
-firemware at the bottom. For the purpose of this article we will focus on race conditions
+firmware at the bottom. For the purpose of this article we will focus on race conditions
 that can occur in our database and how we can mitigate them using different transaction isolation levels.
 
 ### Mitigating Race Conditions
@@ -100,7 +100,7 @@ Another case within this example could be the bank is determining the user's mon
 account. The bank has a policy where if the total dollars exceeds $5,000 then there is no
 monthly bill. Unfortunately due to the lack of a transaction, the monthly billing service read $0 in
 both accounts, causing a charge. A direct consequence of the race condition with real world consequences
-that can be avoided using repeatable committed.
+that can be avoided using read committed.
 
 ### Snapshot Isolation and Repeatable Read
 
@@ -122,7 +122,7 @@ several other transactions can complete, potentially exposing us to inconsistenc
 For example, there is a backup is occurring and a user's bank account X is written to the backup with
 $500. As the backup continues executing there is a transfer from bank account Y,
 where $100 is sent to bank account X. If bank account Y has not yet been backed up,
-there will be an inconsistency in the backup data where $100 went magically went missing.
+there will be an inconsistency in the backup data where $100 magically went missing.
 This inconsistency example is called read skew. [5] This case is averted by the backup processing using snapshot isolation.
 By using snapshot isolation the data will remain in a consistent state, allowing us to create a reliable database backup.
 
@@ -142,8 +142,8 @@ higher read/write times. [7] [8]
 
 #### Race Condition Example - Write Skew
 
-Write skew is a easy to miss example of a race condition. Write skew is caused by phantoms, in other words,
-data that does not exist. Write skew occurs when database operations depend on the abscence of data.
+Write skew is an easy to miss example of a race condition. Write skew is caused by phantoms, in other words,
+data that does not exist. Write skew occurs when database operations depend on the absence of data.
 The previous isolation levels mentioned, do nothing to create locks on data that does not yet exist.
 
 Here is a real life example of write skew. I go to a fitness studio with live classes called Orange Theory
@@ -158,7 +158,7 @@ WHERE SCHEDULED_ATTENDEES.class_id = X
 AND 20 > (SELECT COUNT(*) FROM SCHEDULED_ATTENDEES WHERE class_id = X)
 ```
 
-As you can see we're checking that there is less than 20 attendees scheduled for class X.
+As you can see, we're checking that there are less than 20 attendees scheduled for class X.
 If there are less than 20 rows for the class, then the database does the insert.
 In other words we're checking for the absence of rows.
 
@@ -170,7 +170,7 @@ isolation levels, there is no serialization and no locking on the non-existent r
 Everything that took place was legal and the database schema itself
 has no constraint on the amount of scheduled attendees for the class.
 
-This is a sneaky race conditon, but the serialization isolation level solves this right? For most implementations, no.
+This is a sneaky race condition, but the serialization isolation level solves this right? For most implementations, no.
 Serialization typically only locks rows that are being written to. Meaning that this case would still
 occur, because the row being written does not prevent another row from being written
 
