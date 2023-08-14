@@ -63,9 +63,9 @@ but not yet seeing their profile when they refresh the page.
 [A race condition can also be as sinister as bankrupting a CryptoConcurrency exchange](https://old.reddit.com/r/Bitcoin/comments/1wtbiu/how_i_stole_roughly_100_btc_from_an_exchange_and/).
 
 Race conditions are tricky to test for because they only occur when we get unlucky with timing. [1]
-To understand the depth of what in our software stack can be 'unlucky' we must recognize
-that anomalies can occur anywhere from the top of the stack all the way to the
-firmware at the bottom. For the purpose of this article we will focus on race conditions
+To understand the depth of what in our software stack can be 'unlucky,' we must recognize
+that anomalies can occur anywhere. They can occur in the application code at the top of the
+stack and even in the firmware at the very bottom. For the purpose of this article we will focus on race conditions
 that can occur in our database and how we can mitigate them using different transaction isolation levels.
 
 ### Mitigating Race Conditions
