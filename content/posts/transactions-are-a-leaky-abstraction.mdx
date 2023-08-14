@@ -75,12 +75,12 @@ with different transaction isolation levels.
 
 ### Read Committed
 
-The most basic level of transaction isolation is read committed. It makes two guarantees:
+The most basic level of transaction isolation is read committed. It makes two guarantees: [3]
 
 > 1. When reading from the database, you will only see data that has been committed (no dirty reads).
 > 2. When writing to the database, you will overwrite data that has been committed (no dirty writes).
 
-<cite>&mdash; Martin Kleppmann</cite> [3]
+<cite>&mdash; Martin Kleppmann</cite>
 
 #### Race Condition Example
 
