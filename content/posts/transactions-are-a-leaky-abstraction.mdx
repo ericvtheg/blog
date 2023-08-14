@@ -1,13 +1,13 @@
 ---
-title: Database Transactions are a Leaky Abstraction
-description: Transactions empower application developers, but we must understand what occurrs under the hood.
+title: Database Transactions Are a Leaky Abstraction
+description: Transactions empower application developers, but we must understand what occurs under the hood.
 date: "2023-08-15"
 ---
 
 As application developers, database transactions abstract us away from
 [concurrency control](https://www.geeksforgeeks.org/concurrency-control-in-dbms/#)
-to let us design our systems as if just a single process is modifying state serially. [1]
-Unfortunately it is not that simple.
+to let us design our systems as if only a single process is modifying state serially. [1]
+Unfortunately it isn't that simple.
 
 Disclaimer: This article is influenced by Martin Kleppmann's book, _Designing Data-Intensive Applications_.
 
@@ -27,15 +27,15 @@ Disclaimer: This article is influenced by Martin Kleppmann's book, _Designing Da
 
 ## Transactions & Concurrency Control
 
-Database transactions give us the illusion that all operations are done serially.
-If this was the case, we wouldn't need to worry about
-exceptional circumstances where our data was modified in ways we didn't anticipate.
+Database transactions provide us the illusion that all operations are done serially.
+If this were the case, we wouldn't need to concern ourselves with
+situations where our data could be modified in unusual ways.
 
-This illusion is done through concurrency control via transaction isolation.
+This illusion is created through concurrency control via transaction isolation.
 Transactions can be configured using different levels of isolation.
-Each level has potentially detrimental _gotchas_ that we must be aware of.
-In order to build robust systems we must understand how transactions
-work and what level of isolation our database uses.
+Each level has potentially detrimental 'gotchas' that we must be aware of.
+To create robust systems, it's essential to understand how transactions function
+and the isolation level used by our database.
 
 ## Transaction Isolation Levels
 
@@ -43,11 +43,11 @@ Transaction isolation refers to how the database itself handles concurrent data 
 Each isolation level has its own rules for when data can be read/written to.
 Limiting access to other transactions is done through locking and serialization.
 As data access becomes more strict there are trade-offs such as stronger
-data consistency but worse performance. [1]
+data consistency but with worse performance. [1]
 
 Understanding how our databases writes and reads is crucial for mitigating the potential
 of race conditions between our concurrent transaction. To add even more complexity, there
-is no standard for isolation levels across databases. For example snapshot isolation in
+is no standard for isolation levels across databases. For example, snapshot isolation in
 PostgreSQL is called repetable read, while in Oracle it is called serializable. [2]
 
 Before diving into different transaction isolation levels, let's further discuss
@@ -55,7 +55,7 @@ what we are trying to avoid.
 
 ## Race Conditions
 
-Race conditions can occur when multiple processes attempt to read/modify data at the same time,
+Race conditions can occur when multiple processes attempt to read/modify data at the same time—
 leading to situations where unexpected outcomes occur.
 
 An example of a race condition can be as benign as a user creating an account
@@ -77,8 +77,8 @@ with different transaction isolation levels.
 
 The most basic level of transaction isolation is read committed. It makes two guarantees: [3]
 
-> 1. When reading from the database, you will only see data that has been committed (no dirty reads).
-> 2. When writing to the database, you will overwrite data that has been committed (no dirty writes).
+> 1. When reading from the database, you will only see data that has been committed
+> 2. When writing to the database, you will overwrite data that has been committed
 
 <cite>&mdash; Martin Kleppmann</cite>
 
@@ -104,16 +104,18 @@ that can be avoided using repeatable committed.
 
 ### Snapshot Isolation and Repeatable Read
 
-As the name implies, in the snapshot isolation transaction level, all transactions work on a snapshot
-of the database from when the transaction began. Regardless if subsequent transactions commit, the
-data that is being read/written will stay the same from the perspective of the transaction. [4]
+In the snapshot isolation transaction level, all transactions work on a snapshot
+of the database from when the transaction began to when it ends. If subsequent transactions commit changes
+during the duration of the original transaction, those changes will not be observed by the original transaction.
+Overall the state of the database will remain the same from the perspective of the transaction for the
+entirety of its execution. [4]
 
 Snapshot isolation is used in PostgreSQL and MySQL and is referred to as repeatable read. [2]
 
 #### Race Condition Example - Read Skew
 
-An excellent example of a race condition that is avoided through the use of snapshot isolation is when
-creating a database backup. Naturally when creating a backup of potentially several terabytes of data,
+An excellent example of a race condition that can be avoided through the use of snapshot isolation is when
+creating a database backup. Naturally, when creating a backup of potentially several terabytes of data,
 it will take a relatively long amount of time to complete. As the backup process is executing,
 several other transactions can complete, potentially exposing us to inconsistencies in our data. [5]
 
@@ -174,19 +176,19 @@ occur, because the row being written does not prevent another row from being wri
 
 So how do we solve this? There are two ways:
 
-1. Literally executing each transaction one at a time [6]
+1. By literally executing each transaction one at a time [6]
 2. Using predicate locks [8]
 
-Predicate locks work by locking a whole range of rows that are accessed in the query, whether they exist or not.
+Predicate locks work by locking a range of rows that the query accesses, whether they exist or not. [8]
 By issuing a lock on the range of rows in this case, we prevent the race condition thus allowing us to safely book
 our live fitness studio class. Phew.
 
 ## Conclusion
 
 In this article we discussed different transaction isolation levels and what their
-intentions are. So which isolation level should we use for our applications?
-In the end there is no one size fits all solution. The best we can do is pick the
-best isolation level for the job and build around its short comings in our application.
+intentions are. So, which isolation level should we use for our applications?
+Ultimately, there is no one-size-fits-all solution. The best we can do is choose the most
+suitable isolation level for the job and work around its shortcomings in our application.
 In order to do so we must have an understanding of how transactions work in our database.
 The very definition of a leaky abstraction.
 
