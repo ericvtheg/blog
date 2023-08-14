@@ -170,12 +170,9 @@ our live fitness studio class. Phew.
 
 ## Conclusion
 
-this article doesn't even discuss replication which adds network, balancing, consensus, etc to the mix.
-
-We've gone through various levels of transaction isolation, so which do we use? Trade offs.
-
-In the end there is no one size fits all solution, and the best we can do is understand how our database
-works and build arround it in our application. (leaky abstraction)
-
-As much as we'd like to trust our abstractions and lean into them, we are forced to think about every layer's failure in our systems
-and account for them.
+In this article we discussed different transaction isolation levels and what their
+intentions are. So which isolation level should we use for our applications?
+In the end there is no one size fits all solution. The best we can do is pick the
+best isolation level for the job and build around its short comings in our application.
+In order to do so we must have an understanding of how transactions work in our database.
+The very definition of a leaky abstraction.
