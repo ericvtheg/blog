@@ -1,0 +1,201 @@
+---
+title: AI in Music
+description: How AI is empowering (and disempowering) musicians.
+date: "2023-08-27"
+---
+
+<p align="center">
+  <img src="/ai-in-music-cover.png" alt="Robot with a piano" width="400" />
+  Image generated using Stable Diffusion.
+</p>
+
+As generative AI continues to disrupt the world, how will it affect musicians? Creative
+people, hereby referred to as creatives, seem to be the first group of people whose
+output has been (arguably) replicated by generative AI. Computers to me have always
+lacked creativity. Computers are good at computing and following the instructions
+they're told, but now they're breaking into the creative space and creating art?
+I find this fascinating, and wanted to explore into what is going on with AI and
+generative AI in the area of music production.
+
+Music production to me is particularly interesting because 1. I'm a consumer and 2. [my best friend
+is an incredibly talented electronic dance music (EDM) producer](https://open.spotify.com/artist/6gdxAwlMzXUGuYRjPhgHbR).
+Looking into the music and the creative industry as a whole, it's an unfortunate truth that
+success does not necessarily correlate to talent. My passion projects are typically in the EDM niche for this
+reason. My goal being to deliver value in the space and help talented musicians succeed.
+
+With that said let's see how AI is empowering and disempowering musicians.
+
+# What Do Music Producers Do?
+
+Coming from a layman, the workflow of a producer looks something like the following:
+
+There is the creative work of writing and producing music. Which includes writing lyrics and melodies.
+From there comes the production work of creating vocals and flushing out the song with sounds. Once that
+is done there is audio engineering work required to mix and master the produced song. This step makes the song
+sound crisp and clear on different speakers.
+
+Once a song is created, if a producer wants to upload their music to a music stream platform they need to
+pair it with another creative asset: cover art.
+
+In summary the creative workflow for a looks something like:
+
+```
+* Music
+    * Writing
+        * Lyrics
+        * Melodies
+    * Producing
+        * Vocals
+    * Mixing & mastering
+* Creating complementary art
+
+```
+
+# Using AI to Improve the Music Production Workflow
+
+We have a general idea of the music production journey, so let's see how we can improve/optimize it.
+
+## Generating Visual Art
+
+An example of visual art necessary for musicians is cover art for their songs.
+Every single song on music streaming platforms is paired with cover art. Cover art is uniquely
+important for musicians, because often cover art is the first impression a listener has
+of a song. Often being the reason a listener chooses to listen to the song.
+
+Considering how important cover art is for a music producer, yet how completely
+disparate the skillsets are, it's clear that there is some workflow improvements to be made.
+Generative AI in the world of 2023 can [create photo realistic images,](https://www.nvidia.com/en-us/gpu-cloud/picasso/#models)
+so I'm sure it can help with this use case.
+
+I recently got Stable Diffusion installed locally on my computer ([guide here](https://stable-diffusion-art.com/install-mac/)).
+Immediately I asked my edm producer friend (AYDO8) for the vibe of a song he's finished.
+His response, "idk maybe some silhouette of a girl trapped in a tunnel or something."
+With that illustrative description, I prompted Stable diffusion with:
+`cover art for an EDM song. The vibe of the song is silhouette of a girl trapped in a tunnel` and
+got the following result in about 15 seconds:
+
+<p align="center">
+  <img
+    src="/cover-art-ai-generated.png"
+    alt="silhouette of a girl trapped in a tunnel"
+    width="400"
+  />
+</p>
+
+The image isn't perfect, but with further prompt tuning and combing through the ouput I'm sure it could be close.
+The previous workflow for a producer would consist of either creating the image by themselves or hiring someone to.
+Both of which take a lot of time. With that said, I am positive that generative AI is here to say for cover art.
+
+## Generating Vocals
+
+Getting good vocals for songs is a huge roadblock for producers. In order to get professional quality
+vocals, producers often need to pay freelance singers which can range anywhere from $100s to $1000s of dollars.
+
+There are some absolutely insane AI generated vocals on the
+internet nowadays. For example check out this Gangsta's Paradise cover "by" Frank Sinatra.
+
+<p align="center">
+  <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/W7SQ4uf9GmA?si=LBWUJq-7hH391riK"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  />
+</p>
+As cool as this cover is, is such technology to modern day producers? The answer:
+extremely accessible - all the software used is free and open source. There is a
+[Google Colab Notebook](https://colab.research.google.com/drive/1Gj6UTf2gicndUW_tVheVhTXIIYpFTYc7?usp=sharing#scrollTo=Y13Eh9r_g8f-)
+with [instructions](https://docs.google.com/document/d/13_l1bd1Osgz7qlAZn-zhklCbHpVRk6bYOuAuB78qmsE/edit)
+on how to isolate existing vocals and change the voice to a different person. The
+catch is the vocals are limited to the [available models](https://docs.google.com/spreadsheets/d/1tAUaQrEHYgRsm1Lvrnj14HFHDwJWl0Bd9x0QePewNco/edit#gid=1977693859)
+and the model can only be applied to existing vocals.
+
+There are some tools that create speech just from text such as https://murf.ai/ and https://www.uberduck.ai/. But from my tinkering they
+seem pretty limited and not really geared towards lyrics. I imagine generating vocals from just lyrics that fit the song is difficult.
+There is tempo, key, and the general vibe of the instrumental of the song that must be compatible.
+
+## Mixing and Mastering
+
+Mixing and mastering is another skillset that is largely separate from production. "Mixing is when an engineer carves and balances the separate
+tracks in a song to sound good when played together. While mastering a song means putting the finishing touches on a
+track by enhancing the overall sound, creating consistency across the album, and preparing it for distribution." [1]
+
+Often producers will pay people that are experienced audio engineers to mix and master their songs. This is due to
+the disconnect in skills to properly mix and master a song and to actually produce a song. Naturally this makes it a good
+opportunity to automate using AI based tools.
+
+Currently this mixing and mastering workflow isn't automated, but it is being improved with AI back tools such as
+[Neutron by Izotope](https://www.izotope.com/en/products/neutron.html). Neutron abstracts away some of the complication
+of mixing and mastering, to enable music producers to easily tweak sounds to their liking.
+
+# Generative AI in Music
+
+We talked about how music producers can improve their workflows, but can AI just
+generate the entirety of a song instead?
+
+It is important to note that some songs have gone viral as "songs created by AI", but typically they just use the vocal
+generating method that we used above. In other words, everything besides the sound of the voice is human made.
+
+## OpenAI
+
+<p align="center">
+  <iframe
+    width="100%"
+    height="300"
+    scrolling="no"
+    frameborder="no"
+    allow="autoplay"
+    src="https://w.soundcloud.com/player/?url=https%3A//api.soundcloud.com/tracks/788111551&color=%23ff5500&auto_play=false&hide_related=false&show_comments=false&show_user=true&show_reposts=false&show_teaser=true&visual=true"
+  />
+</p>
+{/* Talk about OpenAIs work on generative music */}
+{/* "It takes approximately 9 hours to fully render one minute of audio through our models" https://openai.com/research/jukebox#limitations */}
+{/* Talk about how granular audio is with x GHz of data per second */}
+{/* show example of AI generated song */}
+{/* https://soundcloud.com/openai_audio/jukebox-341290988 */}
+{/* talk about how the project seems to be dead */}
+{/* https://openai.com/research/musenet */}
+
+## Meta
+
+// looks like facebook is doing work as well
+// https://about.fb.com/news/2023/08/audiocraft-generative-ai-for-music-and-audio/
+// https://huggingface.co/spaces/facebook/MusicGen
+
+// reasons music generative AI projects seem to be stagnating
+// music industry is shrinking
+// copyright in the music industry is a beast
+// since already existing LLM are trained on questionable data
+// i.e. the legality is ambigious
+// high fidelity and a small mistake in a song is apparent (as opposed to a image)
+
+## AIVA
+
+<p align="center">
+  <iframe
+    width="560"
+    height="315"
+    src="https://www.youtube.com/embed/Emidxpkyk6o?si=ujy1a9f6HK7-roXE"
+    title="YouTube video player"
+    frameborder="0"
+    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+    allowfullscreen
+  />
+</p>
+{/* https://aiva.ai/ */}
+{/* stands for Artificial Intelligence Virtual Artist */}
+{/* aiva generated music was used in Nvidias keynote opening */}
+{/* https://d3.harvard.edu/platform-digit/submission/aiva-technology-composing-music-using-ai/#:~:text=In%20fact%2C%20AIVA%20is%20the,for%20the%20music%20it%20composes. */}
+{/* https://www.youtube.com/@aiva1828/featured */}
+{/* https://www.youtube.com/watch?v=Emidxpkyk6o */}
+{/* seems more secretive */}
+{/* https://medium.com/@aivatech */}
+{/* hasn't published a blog post since 2018 */}
+{/* https://www.nvidia.com/en-us/on-demand/session/gtcspring21-se2345/ */}
+{/* learns from written notes on a score that are digitized (midi format) */}
+{/* do not train on audio, train on notes */}
+
+[1] https://www.izotope.com/en/learn/what-is-the-difference-between-mixing-and-mastering.html#:~:text=Mixing%20is%20when%20an%20engineer,and%20preparing%20it%20for%20distribution.
