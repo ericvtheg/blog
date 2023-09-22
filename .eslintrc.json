@@ -2,5 +2,10 @@
   "extends": "next/core-web-vitals",
   "rules": {
     "semi": [2, "always"]
-}
+},
+"overrides": [{
+  "files": ["*.mdx", "*.md"],
+  "parser": "eslint-plugin-markdownlint/parser",
+  "extends": ["plugin:markdownlint/recommended"]
+}]
 }
