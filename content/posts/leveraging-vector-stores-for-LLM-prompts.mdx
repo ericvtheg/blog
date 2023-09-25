@@ -1,0 +1,163 @@
+---
+title: Using Vector Databases to Enrich LLM Responses
+description: Enabling Users to Query Application Data Solely Through Natural Language
+date: "2023-09-24"
+---
+
+First there was a CLI to interact with the computer, then a user interface, and now a CLI.
+Except now we can communicate with the computer in just plain English.
+
+<p align="center">
+  <img
+    src="/cover-art-vector-db-llm.png"
+    alt="Business graphic network"
+    width="400"
+  />
+  Image generated using Stable Diffusion.
+</p>
+
+# Introduction
+
+We've seen the rise of LLMs and the hype surrounding them. They do awesome things
+and are incredible at producing articulate natural language. Which is all well and good, but
+how can we as software developers empower our applications with LLMs?
+
+In order to do so we can use a technique known as _Retrieval Augmented Generation_ (RAG). In this
+article we will create an example implementation of RAG.
+
+# Implementation
+
+The tool we're creating in this article is a Job Search Assistant. Given a description of
+what a user is looking for, it will return a natural language response of related available
+job listings. We will be using [LangChain](https://www.langchain.com/) to help us accomplish this.
+
+Our Job Search Assistant will be backed by an example dataset from my friend's start up
+[SurelyWork.com](https://SurelyWork.com). A startup focused on creating a specialized job board for creatives.
+
+## Data Storage and Retrieval
+
+Here we will talk about how we store our data and how we retrieve it in order to augment our prompt.
+
+### Documents
+
+Documents are used to represent data and will be stored in our vector database.
+They can be queried for similarities based on a natural language string input.
+The vector database checks the string for similarities with the `pageContent` field value in the document.
+When a document is similar enough that it is returned, it includes both the `pageContent` and the `metadata` fields. The
+`metadata` field is NOT for searching for similarities.
+
+The LangChain interface for a document:
+
+```ts
+interface Document {
+  pageContent: string;
+  metadata?: Record<string, any>;
+}
+```
+
+There are different systems for splitting data into documents. In our case for Surely Work,
+it is intuitively one document per job listing.
+
+### Embeddings
+
+[Embedding](https://platform.openai.com/docs/guides/embeddings/what-are-embeddings) is the step where we translate our human readable data into an n dimensional vector.
+The vectors, in our case, are specifically used for measuring relatedness.
+
+In order to get the vectors from our data, we must use a machine learning model. We will be using OpenAI's
+`text-embedding-ada-002` model to generate our embeddings.
+
+### Vector Databases
+
+Now that we know what embeddings are used for and where they come from (kinda),
+we have to store them. By storing them in our vector database, we enable the ability to
+search for related documents using a natural language string.
+
+Generating our embeddings and loading them into a vector database using LangChain is as simple as:
+
+```ts
+// generate embeddings using OpenAI and store them into an in memory vector database
+const vectorStore = await MemoryVectorStore.fromDocuments(
+  documentData,
+  new OpenAIEmbeddings()
+);
+
+// using a query string, fetch 1 document that is the most similar
+const documentResult = await vectorStore.similaritySearch(query, 1);
+```
+
+Sweet, so now in the context of our Job Search Assistant we are able to quickly
+fetch related job listings from a user's input. In the next section we will
+utilize this functionality within our prompt to the LLM.
+
+## Prompt Engineering
+
+Using our ability to quickly fetch related job listings from a user's input, we can
+augment our prompt to include the data. Our LLM will then smartly
+use that data to answer our user's query.
+
+### Example
+
+Let's see an example of what an interaction with our Job Search Assistant would look like for a fashion designer seeking a job.
+
+> **Input**: I'm a fashion designer based in Los Angeles.
+>
+> **Output**:
+> That's great to hear! As a fashion designer based in Los Angeles, you might be interested in a couple of job listings we have on SurelyWork.com:
+>
+> 1. LA Fashion Week: Designer Casting Call by Asal Etemadi: They are looking for independent designers to showcase their work on their runway during LA Fashion Week. It's a great opportunity to have your designs come to life alongside mesmerizing music performances. The deadline to submit your designs is September 23rd. You can find more information and apply [here](https://www.surelywork.com/listings/2cWnvuxmo4eBAwxSyktC).
+>
+> 2. Casting Call for Jewelry Brand by Jacqueline Kulla: They are specifically looking to cast redheads for a shoot for their jewelry brand. If you have red hair, this could be a great opportunity for you. The details and application can be found [here](https://www.surelywork.com/listings/XaLMQl5uSWiuwDjBXBGk).
+>
+> Feel free to check out these listings and apply if they align with your interests and skills. Let me know if there's anything else I can assist you with!
+
+As you can see our LLM successfully used the data for the relevant job listings in its response and even included links to them.
+
+### Dissecting the Prompt
+
+Lets break our prompt into multiple parts to better understand what we are conveying to our LLM. Our prompt tells the LLM what
+its purpose is, what data is to be included in the prompt, and how to use the data.
+
+What it's purpose is:
+
+```
+You are Surely AI.
+A chat bot for SurelyWork.com that helps people find applicable jobs as Creatives.
+```
+
+What data is included:
+
+```
+You should be given relevant job listings in the form of a JSON.
+Following the job listings you will be given a prompt from a user.
+```
+
+How to use the data:
+
+```
+If you receive a job listing in the prompt include information about it in your response.
+Feel free to not include some of the listings provided if you think they are not relevant.
+If more than one of the job listings provided is relevant include information about all of them.
+For every relevant job listing make sure to include the applicationUrl.
+If none of the job listings are relevant, truthfully respond we don't have any relevant job listings at the moment.
+You are strictly to talk about SurelyWork and its job listings, do not talk about anything else.
+```
+
+The data included:
+
+```
+Job Listings: <jobs_listings>
+
+<human_prompt>
+```
+
+We convey our intent to the LLM and help guide its output to fit our needs. From there
+the LLM does the rest of the magic of communicating in natural language seamlessly.
+
+# Conclusion
+
+With this article we were able to showcase an example of how LLMs give the
+illusion that they are consulting with a database while "thinking".
+When really we are just injecting data into the prompt to give that impression,
+then the LLM itself just does its magic of seamless natural language processing.
+
+You can check out the code [here](https://github.com/ericvtheg/surely-ai).
