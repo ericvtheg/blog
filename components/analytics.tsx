@@ -3,6 +3,8 @@
 import { Analytics as VercelAnalytics } from "@vercel/analytics/react";
 import Script from "next/script";
 
+const GA_TRACKING_ID = "G-5YSEFPTG53";
+
 function GoogleAnalytics() {
   return (
     <>
@@ -30,5 +32,3 @@ export function Analytics() {
     </>
   );
 }
-
-const GA_TRACKING_ID = "G-5YSEFPTG53";
