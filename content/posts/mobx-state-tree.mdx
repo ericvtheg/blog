@@ -1,0 +1,179 @@
+---
+title: Mobx State Tree: The Missing View Model for React
+description: How Mobx State Tree solved my React state management woes and transformed my development workflow.
+date: "2024-04-28"
+---
+
+<p align="center">
+  <img src="tree-with-nodes.webp" alt="Illustration of a tree with data nodes" width="400" />
+  Image generated using Stable Diffusion.
+</p>
+
+After years of wrestling with React state management, I've found my holy grail: Mobx State Tree (MST). As the founder of [MAKID](https://makidapp.com), an Ableton Live project manager, I've had the opportunity to work extensively with MST in a real-world application. In this article, I'll share my journey and insights into why MST has become my go-to solution for state management.
+
+<blockquote class="twitter-tweet">
+  <p lang="en" dir="ltr">I have to say I love mobx state tree so much. I feel like it's helping react click for me finally.</p>
+  &mdash; Eric (@ericvtheg) <a href="https://x.com/ericvtheg/status/1816965930926375293">January 18, 2024</a>
+</blockquote>
+
+# Why Mobx State Tree?
+
+Coming from a background of using React Context and dealing with prop drilling, I found myself hitting walls as my applications grew in complexity. MST offers a structured approach to state management that feels natural and scales beautifully with your application's needs.
+
+## The View Model Pattern
+
+One of MST's strongest features is how it implements the view model pattern. In traditional React development, you often end up with a tangled web of state management:
+
+```typescript
+// Without MST - Multiple useStates and contexts
+const ProjectList = () => {
+  const [projects, setProjects] = useState([]);
+  const [selectedProject, setSelectedProject] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const { user } = useUserContext();
+  
+  // Complex state updates spread across components
+  const updateProject = async (projectId, data) => {
+    setIsLoading(true);
+    try {
+      await api.updateProject(projectId, data);
+      setProjects(prev => prev.map(p => 
+        p.id === projectId ? { ...p, ...data } : p
+      ));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  // ... more state management logic
+}
+```
+
+With MST, this becomes much cleaner:
+
+```typescript
+// With MST - Centralized state management
+const ProjectStore = types
+  .model('ProjectStore', {
+    projects: types.array(Project),
+    selectedProjectId: types.maybe(types.string),
+    isLoading: false
+  })
+  .views(self => ({
+    get selectedProject() {
+      return self.projects.find(p => p.id === self.selectedProjectId);
+    }
+  }))
+  .actions(self => ({
+    async updateProject(projectId, data) {
+      self.isLoading = true;
+      try {
+        await api.updateProject(projectId, data);
+        const project = self.projects.find(p => p.id === projectId);
+        if (project) {
+          project.update(data);
+        }
+      } finally {
+        self.isLoading = false;
+      }
+    }
+  }));
+```
+
+# Real-World Challenges and Solutions
+
+## Syncing with the Backend
+
+One challenge I encountered while building MAKID was keeping the frontend state in sync with the backend. Initially, I had updates happening in multiple places, which quickly became unwieldy. Here's how I solved it:
+
+```typescript
+const ProjectStore = types
+  .model('ProjectStore', {
+    projects: types.array(Project)
+  })
+  .actions(self => ({
+    // Centralized update logic
+    async updateProjectName(projectId, newName) {
+      // First update the backend
+      await api.updateProjectName(projectId, newName);
+      
+      // Then update the local state
+      const project = self.projects.find(p => p.id === projectId);
+      if (project) {
+        project.setName(newName);
+      }
+    }
+  }));
+```
+
+By making the MST actions responsible for both the API calls and state updates, we maintain a single source of truth and ensure consistency.
+
+## Working with Third-Party Libraries
+
+When integrating MST with libraries like TanStack Table that manage their own internal state, you might run into some friction. Here's a pattern I've found effective:
+
+```typescript
+const ProjectTable = observer(() => {
+  const { projectStore } = useStores();
+  
+  const table = useReactTable({
+    data: projectStore.projects,
+    columns,
+    // Let TanStack handle UI state
+    state: {
+      sorting: projectStore.tableSorting,
+      pagination: projectStore.tablePagination
+    },
+    // But delegate permanent state changes to MST
+    onSortingChange: (updater) => {
+      const newSorting = typeof updater === 'function' 
+        ? updater(projectStore.tableSorting)
+        : updater;
+      projectStore.setTableSorting(newSorting);
+    }
+  });
+  
+  return <TableComponent table={table} />;
+});
+```
+
+# Why MST Clicks
+
+The beauty of MST lies in its structured approach to state management:
+
+1. **Models Define Shape**: Your data structure is clearly defined and type-safe
+2. **Views Handle Derivations**: Computed values are cached and reactive
+3. **Actions Manage Changes**: All state modifications happen in a predictable way
+
+This separation of concerns makes it much easier to reason about your application's state:
+
+```typescript
+const UserStore = types
+  .model('UserStore', {
+    users: types.array(User),
+    searchQuery: types.string
+  })
+  .views(self => ({
+    // Derived data
+    get filteredUsers() {
+      return self.users.filter(user => 
+        user.name.toLowerCase().includes(self.searchQuery.toLowerCase())
+      );
+    }
+  }))
+  .actions(self => ({
+    // State modifications
+    setSearchQuery(query) {
+      self.searchQuery = query;
+    }
+  }));
+```
+
+# Conclusion
+
+Mobx State Tree has transformed how I think about React state management. Its structured approach, combined with the power of observables, has made complex state management feel natural and maintainable. While there are challenges, particularly when integrating with certain third-party libraries, the benefits far outweigh the costs.
+
+For those starting with MST, I encourage you to embrace its patterns fully. Let your stores handle the business logic, your views compute derived data, and your React components focus on what they do best: rendering UI.
+
+If you're interested in seeing MST in action, check out [MAKID](https://makidapp.com), where we're using it to manage complex state in our Ableton Live project manager. The clarity and maintainability it brings to our codebase have been invaluable as we continue to grow and add features.
+
+Remember, good state management isn't about using the newest or most popular tools—it's about finding what works best for your specific needs. For me and my projects, MST has proven to be that solution.
