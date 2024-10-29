@@ -145,30 +145,6 @@ The beauty of MST lies in its structured approach to state management:
 2. **Views Handle Derivations**: Computed values are cached and reactive
 3. **Actions Manage Changes**: All state modifications happen in a predictable way
 
-This separation of concerns makes it much easier to reason about your application's state:
-
-```typescript
-const UserStore = types
-  .model('UserStore', {
-    users: types.array(User),
-    searchQuery: types.string
-  })
-  .views(self => ({
-    // Derived data
-    get filteredUsers() {
-      return self.users.filter(user => 
-        user.name.toLowerCase().includes(self.searchQuery.toLowerCase())
-      );
-    }
-  }))
-  .actions(self => ({
-    // State modifications
-    setSearchQuery(query) {
-      self.searchQuery = query;
-    }
-  }));
-```
-
 # Conclusion
 
 Mobx State Tree has transformed how I think about React state management. Its structured approach, combined with the power of observables, has made complex state management feel natural and maintainable. While there are challenges, particularly when integrating with certain third-party libraries, the benefits far outweigh the costs.
