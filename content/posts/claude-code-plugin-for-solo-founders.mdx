@@ -1,0 +1,87 @@
+---
+title: Building a Claude Code Plugin for Solo Founders
+description: Extending Claude Code with commands and skills for the solo founder workflow.
+date: "2025-12-21"
+---
+
+## The Problem
+
+When you're building a product solo, the actual coding is the easy part. The hard part is deciding what to build.
+
+Do I add the feature users keep asking for? Fix that nagging bug? Optimize the landing page? Write content for SEO? Every decision has tradeoffs and there's no PM to help prioritize.
+
+I end up spending way more time in analysis paralysis than I do writing code. This needed to change.
+
+## What I Built
+
+I created a Claude Code plugin called [Solo Founder Toolkit](https://github.com/ericvtheg/solo-founder-toolkit) that extends Claude with commands and skills built specifically for indie hackers.
+
+Instead of generic AI responses, it gives opinionated frameworks for making these decisions faster.
+
+### Feature Prioritization
+
+The `/solo-feature-ideas` command analyzes your codebase and suggests next features based on what would have the most impact. It considers your existing architecture and what users are likely to need.
+
+### Build in Public Content
+
+Run `/solo-build-in-public-tweet` and it takes your recent git commits and generates tweet ideas. Helps you talk about what you're building without spending an hour crafting posts.
+
+### Landing Page Optimization
+
+Ask Claude to "review my landing page" and it gives CRO feedback using the same frameworks that conversion consultants use. No hiring someone or reading a dozen blog posts.
+
+### Decision Frameworks
+
+When you're stuck between options, Claude walks you through prioritization frameworks like RICE scoring or ICE. Stops you from going in circles and helps you just make a decision and move forward.
+
+## Implementation
+
+The plugin uses Claude Code's custom slash commands and skills system. Commands are markdown files that extend Claude's behavior for specific tasks.
+
+Here's the structure:
+
+```
+plugins/solo-founder-toolkit/
+├── commands/           # Slash commands like /solo-feature-ideas
+├── skills/             # Longer-form guidance (landing page review, etc)
+└── .mcp.json          # Plugin configuration
+```
+
+Each command is just a markdown file with a detailed prompt. For example, the feature prioritization command:
+
+- Analyzes the codebase structure using Glob and Grep
+- Identifies common patterns and existing features
+- Suggests next steps based on impact vs effort
+- Returns prioritized list with reasoning
+
+The skills work similarly but are designed for interactive workflows where Claude needs to ask follow-up questions.
+
+## Why This Works
+
+Most AI coding tools are built for teams or generic tasks. This is opinionated about the solo founder workflow:
+
+- Ship fast over perfect
+- Revenue over vanity metrics
+- Good enough today over perfect next month
+
+When you're building alone you can't afford to spend weeks building the wrong thing. You need frameworks to decide quickly and iterate.
+
+## Installation
+
+Clone the repo:
+
+```bash
+git clone https://github.com/ericvtheg/solo-founder-toolkit.git
+```
+
+Then follow Claude Code's plugin installation docs to add it to your setup.
+
+Once installed, try `/solo-feature-ideas` or ask Claude to "help me prioritize what to build next."
+
+## What's Next
+
+I'm planning to automate more of the repetitive processes solo founders deal with - deployment decisions, user feedback analysis, metric tracking, etc.
+
+If you're a solo founder and want to contribute, I'd welcome it. There's a lot of common workflows we all share that could be codified into reusable commands. You can [open an issue](https://github.com/ericvtheg/solo-founder-toolkit/issues) or submit a PR with workflows that have worked for you.
+
+The repo: [github.com/ericvtheg/solo-founder-toolkit](https://github.com/ericvtheg/solo-founder-toolkit)
