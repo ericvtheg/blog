@@ -1,0 +1,95 @@
+---
+title: Self-Hosted Claude Code Runner
+description: Fire coding prompts from anywhere and get PRs back using your Claude subscription.
+date: "2025-12-29"
+---
+
+## The Problem
+
+I kept having ideas for code changes while away from my computer. Sitting on the train, walking around, whatever. I'd think "oh I should refactor that thing" or "that bug could be fixed by doing X." Then I'd get home and forget half of it.
+
+What I wanted was to fire off a prompt from my phone and have Claude Code chug away on it. Wake up to a draft PR with the changes. No API keys eating into my wallet, just use my existing Claude subscription. Speaking of which, I'm paying $100/month for this thing (oof) so I might as well squeeze every bit of value out of it.
+
+So I built it.
+
+## What I Built
+
+[Claude Code Runner](https://github.com/ericvtheg/claude-code-runner) is a Docker container that accepts task prompts via HTTP and spawns Claude Code to implement them autonomously. It uses your authenticated Claude session (the same one from your subscription) instead of requiring API keys.
+
+It comes with a built-in dashboard for submitting tasks and monitoring progress in real-time.
+
+![Dashboard](/claude-code-runner-dashboard.png)
+
+![Logs View](/claude-code-runner-logs.png)
+
+## Architecture
+
+The system uses a two-stage LLM approach:
+
+### Orchestrator
+
+When you submit a prompt like "fix the auth bug in my api repo", the first Claude instance:
+- Parses your task to figure out which repo you're talking about
+- Searches your GitHub repos via the `gh` CLI
+- Clones it and sets up the environment
+- Spawns a Worker Claude inside the cloned repo
+
+The orchestrator handles all the setup so the worker can focus on coding.
+
+### Worker
+
+A second Claude instance runs inside the cloned repository and:
+- Picks up the repo's existing `.claude/`, `.mcp.json`, and skills
+- Opens a draft PR immediately so you can watch progress
+- Commits and pushes after every logical change (no batching)
+- Spawns subagents for complex tasks to preserve context
+
+The key insight here is that the worker commits incrementally. If Claude dies mid-task or hits rate limits, you don't lose everything. The draft PR shows exactly how far it got.
+
+## It Actually Works
+
+Here's a real example. I was browsing Hacker News on my phone and saw a post about profiling app startup times. It hit me that my side project [MAKID](https://makidapp.com) doesn't track startup time for the desktop app. Normally I'd have to remember this, get to my laptop, open the repo, run Claude Code, and watch it work.
+
+Instead I just opened the dashboard on my phone and submitted "add startup time tracking to the desktop app in the makid monorepo." 15 minutes later I had a PR with exactly what I asked for. Reviewed it, merged it, done.
+
+That's the whole point. I didn't have to context switch or carve out time for it. The idea went straight from my head to a merged PR while I was still doing other stuff.
+
+## Running It
+
+Pull the image:
+
+```bash
+docker pull ericvtheg/claude-code-runner:latest
+```
+
+Docker Compose setup:
+
+```yaml
+services:
+  claude-runner:
+    image: ericvtheg/claude-code-runner:latest
+    container_name: claude-code-runner
+    ports:
+      - "7334:3000"
+    environment:
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - ~/.claude:/home/node/.claude
+    restart: unless-stopped
+```
+
+The magic is in the volume mount. You authenticate Claude Code on your host machine once (`claude` command, follow the prompts), and the container uses those credentials. No API keys, no extra billing.
+
+## API
+
+Submit tasks via HTTP:
+
+```bash
+curl -X POST http://localhost:7334/task \
+  -H "Content-Type: application/json" \
+  -d '{"prompt": "In the acme-api repo, fix the token refresh bug"}'
+```
+
+Or use the dashboard at `http://localhost:7334`. It auto-refreshes and shows logs in real-time.
+
+The repo: [github.com/ericvtheg/claude-code-runner](https://github.com/ericvtheg/claude-code-runner)
